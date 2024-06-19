@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
 """Task 0"""
-import uuid
-from typing import Callable, Optional, Union
+from functools import wraps
 import redis
+from typing import Callable, Optional, Union
+import uuid
+
+
+def count_calls(method: Callable) -> Callable:
+    """Returns how many times a method is called"""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """Counts the Call times"""
+        self._redis.incr(method.__qualname__)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
@@ -13,6 +24,7 @@ class Cache:
         self._redis = redis.Redis(host='localhost', port=6379, db=0)
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Returns the randomly generated key used to store the data"""
         key = str(uuid.uuid4())
