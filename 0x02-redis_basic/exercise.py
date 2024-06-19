@@ -29,6 +29,19 @@ def call_history(method: Callable) -> Callable:
     return wrapper
 
 
+def replay(method: Callable) -> None:
+    """Prints history of inputs and outputs of a method"""
+    name = method.__qualname__
+    dataBase = method.__self__._redis
+    inputs = dataBase.lrange(name + ":inputs", 0, -1)
+    outputs = dataBase.lrange(name + ":outputs", 0, -1)
+    print("{} was called {} times:".format(name, len(inputs)))
+    for input, output in zip(inputs, outputs):
+        input = input.decode("utf-8")
+        output = output.decode("utf-8")
+        print("{}(*{}) -> {}".format(name, input, output))
+
+
 class Cache:
     """A cache class named Cache"""
 
